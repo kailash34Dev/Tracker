@@ -48,7 +48,3 @@ export const colors = {
   error: '#dc3545',
 };
 
-// Dark theme definitions for future extension
-export const darkColors = {
-  // To be defined later based on user feedback
-};

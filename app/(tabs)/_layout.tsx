@@ -81,8 +81,6 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="tasks" />
       <Tabs.Screen name="about" />
-      <Tabs.Screen name="stats" options={{ href: null }} />
-      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

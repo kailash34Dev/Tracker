@@ -5,7 +5,7 @@ import { eq, desc, and } from 'drizzle-orm';
 import { useState, useEffect } from 'react';
 
 // Format YYYY-MM-DD
-export function getTodayString() {
+function getTodayString() {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
