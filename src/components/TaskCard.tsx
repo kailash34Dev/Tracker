@@ -6,7 +6,7 @@ import { colors } from '../theme/colors';
 import { spacing, radius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
-interface CategoryCardProps {
+interface TaskCardProps {
   title: string;
   hours: number;
   iconName: keyof typeof Ionicons.glyphMap;
@@ -23,7 +23,7 @@ interface CategoryCardProps {
   isAnotherTaskActive?: boolean;
 }
 
-export default function CategoryCard({
+export default function TaskCard({
   title,
   hours,
   iconName,
@@ -38,7 +38,7 @@ export default function CategoryCard({
   onDelete,
   onPin,
   isAnotherTaskActive = false
-}: CategoryCardProps) {
+}: TaskCardProps) {
   
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });

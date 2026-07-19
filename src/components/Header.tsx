@@ -1,38 +1,68 @@
-import { View, Text, StyleSheet, TouchableOpacity, Modal, TouchableWithoutFeedback } from 'react-native';
+// React imports
 import { useState, useRef } from 'react';
+// React-native imports
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TouchableWithoutFeedback,
+  Linking,
+} from 'react-native';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
+// Theme imports
 import { colors } from '../theme/colors';
 import { spacing, radius } from '../theme/spacing';
 import { typography } from '../theme/typography';
+// Store imports
+import { useToastStore } from '../store/useToastStore';
 
-export default function Header() {
+interface HeaderProps {
+  title: string;
+  iconName?: keyof typeof Ionicons.glyphMap;
+}
+
+export default function Header({ title, iconName }: HeaderProps) {
+  const showToast = useToastStore((state) => state.showToast);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, right: 0 });
   const optionsButtonRef = useRef<View>(null);
 
   const openDropdown = () => {
     optionsButtonRef.current?.measure((x, y, width, height, pageX, pageY) => {
-      // Position the dropdown below the 3 dots button, aligned to the right screen margin
-      setDropdownPosition({ top: pageY + 44, right: spacing.screenMargin }); 
+      setDropdownPosition({ top: pageY + 44, right: spacing.screenMargin });
       setDropdownVisible(true);
     });
   };
 
-  const handleHelpFeedback = () => {
+  const handleHelpFeedback = async () => {
     setDropdownVisible(false);
-    // Future: Add help/feedback navigation or action
-    alert("Help & feedback coming soon!");
+    const url = 'mailto:kailashphukan34@gmail.com?subject=Time Tracker Help & Feedback';
+
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        throw new Error('No email client found on this device.');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'unknown error';
+      showToast(`Couldn't open email app: ${errorMessage}`, 'error');
+    }
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.leftSection}>
         <View style={styles.titleContainer}>
-          <Ionicons name="checkmark-circle-outline" size={24} color={colors.primary} />
-          <Text style={styles.title}>Task</Text>
+          {iconName && <Ionicons name={iconName} size={24} color={colors.primary} />}
+          <Text style={styles.title}>{title}</Text>
         </View>
       </View>
-      
+
       <View ref={optionsButtonRef} collapsable={false}>
         <TouchableOpacity style={styles.menuButton} onPress={openDropdown}>
           <Ionicons name="ellipsis-vertical" size={20} color={colors.onSurface} />
@@ -40,17 +70,22 @@ export default function Header() {
       </View>
 
       {/* Dropdown Modal */}
-      <Modal 
-        visible={dropdownVisible} 
-        transparent 
-        animationType="fade" 
+      <Modal
+        visible={dropdownVisible}
+        transparent
+        animationType="fade"
         onRequestClose={() => setDropdownVisible(false)}
         statusBarTranslucent={true}
       >
         <TouchableWithoutFeedback onPress={() => setDropdownVisible(false)}>
           <View style={StyleSheet.absoluteFill}>
-            <TouchableWithoutFeedback>
-              <View style={[styles.dropdownMenu, { top: dropdownPosition.top, right: dropdownPosition.right }]}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View
+                style={[
+                  styles.dropdownMenu,
+                  { top: dropdownPosition.top, right: dropdownPosition.right },
+                ]}
+              >
                 <TouchableOpacity style={styles.dropdownItem} onPress={handleHelpFeedback}>
                   <Ionicons name="help-circle-outline" size={18} color={colors.primary} />
                   <Text style={styles.dropdownItemText}>Help & feedback</Text>
@@ -101,7 +136,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderRadius: radius.md,
     paddingVertical: spacing.xs,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -120,5 +155,5 @@ const styles = StyleSheet.create({
     fontSize: typography.sizes.sm,
     color: colors.primary,
     marginLeft: spacing.sm,
-  }
+  },
 });

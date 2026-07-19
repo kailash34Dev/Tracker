@@ -6,7 +6,7 @@ import { spacing, radius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 import SearchBar from './SearchBar';
 
-interface CategoryModalProps {
+interface TaskModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (name: string, theme: string, id?: string) => void;
@@ -14,7 +14,7 @@ interface CategoryModalProps {
   existingTaskNames?: string[];
 }
 
-export default function CategoryModal({ visible, onClose, onSubmit, initialData, existingTaskNames }: CategoryModalProps) {
+export default function TaskModal({ visible, onClose, onSubmit, initialData, existingTaskNames }: TaskModalProps) {
   const [name, setName] = useState('');
   const [theme, setTheme] = useState('random');
   const [error, setError] = useState<string | null>(null);

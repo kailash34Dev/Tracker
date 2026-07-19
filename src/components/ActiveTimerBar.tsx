@@ -1,8 +1,11 @@
-import { View, Text, StyleSheet, TouchableOpacity, Animated, Easing } from 'react-native';
-import { useState, useRef, useEffect, memo } from 'react';
+// React imports
+import { memo, useEffect, useRef } from 'react';
+// React-native imports
+import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-import { spacing, radius } from '../theme/spacing';
+import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
 interface ActiveTimerBarProps {
@@ -57,9 +60,10 @@ export default memo(function ActiveTimerBar({
 
   // Format seconds to HH:MM:SS
   const formatTime = (totalSeconds: number) => {
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
+    const safeSeconds = Math.max(0, totalSeconds);
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
+    const seconds = safeSeconds % 60;
 
     return [
       hours.toString().padStart(2, '0'),
@@ -106,7 +110,7 @@ export default memo(function ActiveTimerBar({
           onPress={onStop}
           activeOpacity={0.7}
         >
-          <Ionicons name="stop" size={20} color={colors.error} />
+          <Ionicons name="stop" size={20} color={colors.onCategoryRed} />
         </TouchableOpacity>
       </View>
     </TouchableOpacity>
@@ -139,6 +143,7 @@ const styles = StyleSheet.create({
   leftTitleGroup: {
     flexDirection: 'row',
     alignItems: 'center',
+    flexShrink: 0,
   },
   pulseDot: {
     width: 8,
@@ -165,6 +170,9 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: typography.sizes.md,
     color: colors.onPrimary,
+    flexShrink: 1,
+    textAlign: 'right',
+    marginLeft: spacing.sm,
   },
   timerRow: {
     alignItems: 'center',

@@ -4,11 +4,11 @@ import { colors } from '../theme/colors';
 import { spacing, radius } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
-interface CreateCategoryButtonProps {
+interface CreateTaskButtonProps {
   onPress: () => void;
 }
 
-export default function CreateCategoryButton({ onPress }: CreateCategoryButtonProps) {
+export default function CreateTaskButton({ onPress }: CreateTaskButtonProps) {
   return (
     <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.iconContainer}>

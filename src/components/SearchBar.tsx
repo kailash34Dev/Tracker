@@ -1,7 +1,10 @@
-import { View, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+// React-native imports
+import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
+// Theme imports
 import { colors } from '../theme/colors';
-import { spacing, radius } from '../theme/spacing';
+import { radius, spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
 interface SearchBarProps {
@@ -12,12 +15,12 @@ interface SearchBarProps {
   autoFocus?: boolean;
 }
 
-export default function SearchBar({ 
-  value, 
-  onChangeText, 
+export default function SearchBar({
+  value,
+  onChangeText,
   placeholder = 'Search tasks...',
   icon = 'search',
-  autoFocus = false
+  autoFocus = false,
 }: SearchBarProps) {
   return (
     <View style={styles.container}>
@@ -47,7 +50,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     paddingHorizontal: spacing.md,
     height: 48,
-    marginBottom: spacing.md,
   },
   icon: {
     marginRight: spacing.sm,
@@ -61,5 +63,5 @@ const styles = StyleSheet.create({
   clearButton: {
     padding: spacing.xs,
     marginLeft: spacing.xs,
-  }
+  },
 });

@@ -20,7 +20,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 
 ## Performance Guidelines (CRITICAL)
 
-- The active timer ticks every second. Always use `React.memo` for list items (like `CategoryCard`) and `useCallback` for their handlers to prevent the entire screen from re-rendering every second.
+- The active timer ticks every second. Always use `React.memo` for list items (like `TaskCard`) and `useCallback` for their handlers to prevent the entire screen from re-rendering every second.
 - Always use `useNativeDriver: true` for React Native `Animated` timelines to offload animations to the UI thread.
 
 ## Useful Commands

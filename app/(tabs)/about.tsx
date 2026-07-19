@@ -1,38 +1,57 @@
+// React-native imports
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Linking, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
-import { colors } from '../../src/theme/colors';
-import { spacing, radius } from '../../src/theme/spacing';
-import { typography } from '../../src/theme/typography';
 import * as Haptics from 'expo-haptics';
+// Theme imports
+import { colors } from '../../src/theme/colors';
+import { spacing } from '../../src/theme/spacing';
+import { typography } from '../../src/theme/typography';
+// Store imports
+import { useToastStore } from '../../src/store/useToastStore';
+// Component imports
+import Header from '../../src/components/Header';
 
 export default function AboutScreen() {
-  const handleLinkPress = (url: string) => {
+  const showToast = useToastStore((state) => state.showToast);
+
+  const handleLinkPress = async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Linking.openURL(url);
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        throw new Error('No app found to handle this link.');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'unknown error';
+      showToast(`Couldn't open URL: ${errorMessage}`, 'error');
+    }
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>About</Text>
+        <Header title="About" iconName="information-circle-outline" />
       </View>
-      
+
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-        
         {/* App Info Section */}
         <View style={styles.brandingSection}>
           <View style={styles.iconContainer}>
-            <Image 
-              source={require('../../assets/images/icon.png')} 
-              style={styles.appIcon} 
-              resizeMode="cover" 
+            <Image
+              source={require('../../assets/images/icon.png')}
+              style={styles.appIcon}
+              resizeMode="cover"
             />
           </View>
           <Text style={styles.appName}>Tracker</Text>
           <Text style={styles.appVersion}>Version 1.0.0</Text>
           <Text style={styles.appDescription}>
-            A beautiful, intuitive time tracking app to help you stay focused, manage your tasks, and boost your daily productivity.
+            A beautiful, intuitive time tracking app to help you stay focused, manage your tasks,
+            and boost your daily productivity.
           </Text>
         </View>
 
@@ -45,7 +64,9 @@ export default function AboutScreen() {
             </View>
             <View style={styles.featureTextContainer}>
               <Text style={styles.featureTitle}>Simple & Friendly UI</Text>
-              <Text style={styles.featureDesc}>Enjoy a clean, distraction-free interface that makes tracking time a breeze.</Text>
+              <Text style={styles.featureDesc}>
+                Enjoy a clean, distraction-free interface that makes tracking time a breeze.
+              </Text>
             </View>
           </View>
           <View style={styles.divider} />
@@ -55,7 +76,9 @@ export default function AboutScreen() {
             </View>
             <View style={styles.featureTextContainer}>
               <Text style={styles.featureTitle}>Live Time Tracking</Text>
-              <Text style={styles.featureDesc}>Start a stopwatch or set a strict timer for any task.</Text>
+              <Text style={styles.featureDesc}>
+                Start a stopwatch or set a strict timer for any task.
+              </Text>
             </View>
           </View>
           <View style={styles.divider} />
@@ -65,7 +88,9 @@ export default function AboutScreen() {
             </View>
             <View style={styles.featureTextContainer}>
               <Text style={styles.featureTitle}>Categorized Tasks</Text>
-              <Text style={styles.featureDesc}>Organize your day with beautiful custom categories and colors.</Text>
+              <Text style={styles.featureDesc}>
+                Organize your day with beautiful custom categories and colors.
+              </Text>
             </View>
           </View>
         </View>
@@ -73,9 +98,9 @@ export default function AboutScreen() {
         {/* Code Section */}
         <Text style={styles.sectionTitle}>Code</Text>
         <View style={styles.card}>
-          <TouchableOpacity 
-            style={styles.linkItem} 
-            onPress={() => handleLinkPress('https://github.com/Ozion/Tracker')}
+          <TouchableOpacity
+            style={styles.linkItem}
+            onPress={() => handleLinkPress('https://github.com/kailash34Dev/Tracker')}
             activeOpacity={0.7}
           >
             <View style={styles.linkLeft}>
@@ -91,9 +116,11 @@ export default function AboutScreen() {
         {/* Support Section */}
         <Text style={styles.sectionTitle}>Support & Feedback</Text>
         <View style={styles.card}>
-          <TouchableOpacity 
-            style={styles.linkItem} 
-            onPress={() => handleLinkPress('mailto:support@timetracker.com')}
+          <TouchableOpacity
+            style={styles.linkItem}
+            onPress={() =>
+              handleLinkPress('mailto:kailashphukan34@gmail.com?subject=Time Tracker Support')
+            }
             activeOpacity={0.7}
           >
             <View style={styles.linkLeft}>
@@ -105,9 +132,11 @@ export default function AboutScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
           <View style={styles.divider} />
-          <TouchableOpacity 
-            style={styles.linkItem} 
-            onPress={() => handleLinkPress('https://timetracker.com/feedback')}
+          <TouchableOpacity
+            style={styles.linkItem}
+            onPress={() =>
+              handleLinkPress('mailto:kailashphukan34@gmail.com?subject=Time Tracker Feedback')
+            }
             activeOpacity={0.7}
           >
             <View style={styles.linkLeft}>
@@ -119,9 +148,8 @@ export default function AboutScreen() {
             <Ionicons name="chevron-forward" size={20} color={colors.onSurfaceVariant} />
           </TouchableOpacity>
         </View>
-        
-        <Text style={styles.footerText}>Made with ❤️ by Ozion</Text>
 
+        <Text style={styles.footerText}>Made with ❤️ by Ozion</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -145,7 +173,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: spacing.screenMargin,
-    paddingBottom: spacing.xl * 4, // Leave space for bottom tab bar
+    paddingBottom: spacing.xl * 4,
   },
   brandingSection: {
     alignItems: 'center',
@@ -244,7 +272,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceVariant,
     opacity: 0.5,
     marginVertical: spacing.md,
-    marginLeft: 40 + spacing.md, // Align with text
+    marginLeft: 40 + spacing.md,
   },
   linkItem: {
     flexDirection: 'row',
@@ -268,5 +296,5 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: spacing.xl,
     opacity: 0.6,
-  }
+  },
 });

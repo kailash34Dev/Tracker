@@ -1,34 +1,33 @@
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  Text,
-  Modal,
-  TouchableWithoutFeedback,
-  TouchableOpacity,
-  Animated,
-} from 'react-native';
+// React imports
+import { memo, useCallback, useState } from 'react';
+// React-native imports
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useState, useRef, useEffect, memo, useCallback } from 'react';
+// Expo imports
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
+// Component imports
 import Header from '../../src/components/Header';
 import SearchBar from '../../src/components/SearchBar';
-import CreateCategoryButton from '../../src/components/CreateCategoryButton';
-import CategoryCard from '../../src/components/CategoryCard';
-import CategoryModal from '../../src/components/CategoryModal';
+import ActiveTimerBar from '../../src/components/ActiveTimerBar';
+import ConflictModal from '../../src/components/ConflictModal';
+import CreateTaskButton from '../../src/components/CreateTaskButton';
 import DeleteConfirmModal from '../../src/components/DeleteConfirmModal';
 import NoteModal from '../../src/components/NoteModal';
-import ActiveTimerBar from '../../src/components/ActiveTimerBar';
-import { getIconForCategory } from '../../src/utils/iconMapper';
+import TaskCard from '../../src/components/TaskCard';
+import TaskModal from '../../src/components/TaskModal';
+// Theme imports
 import { colors } from '../../src/theme/colors';
+import { spacing } from '../../src/theme/spacing';
+import { typography } from '../../src/theme/typography';
+// Store imports
 import { useTimerStore } from '../../src/store/useTimerStore';
 import { useToastStore } from '../../src/store/useToastStore';
-import ConflictModal from '../../src/components/ConflictModal';
-import { spacing, radius } from '../../src/theme/spacing';
-import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
-import { typography } from '../../src/theme/typography';
-import { useTasks, useTodayTimeEntries, useDatabaseMutations } from '../../src/hooks/useDatabase';
+// Utils imports
+import { getIconForCategory } from '../../src/utils/iconMapper';
+// Hooks imports
+import { useDatabaseMutations, useTasks, useTodayTimeEntries } from '../../src/hooks/useDatabase';
 
 export default function TasksScreen() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,7 +36,6 @@ export default function TasksScreen() {
   const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isConflictModalVisible, setIsConflictModalVisible] = useState(false);
   const [conflictTask, setConflictTask] = useState<{ id: number; title: string } | null>(null);
-
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [pendingSession, setPendingSession] = useState<any>(null);
 
@@ -75,7 +73,9 @@ export default function TasksScreen() {
     async (categoryId: number, categoryTitle: string) => {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      if (activeTaskId === categoryId) {
+      const currentActiveId = useTimerStore.getState().activeTaskId;
+
+      if (currentActiveId === categoryId) {
         // Stopping current timer
         const result = stopTimer();
         if (result) {
@@ -83,7 +83,7 @@ export default function TasksScreen() {
           setNoteModalVisible(true);
         }
       } else {
-        if (activeTaskId) {
+        if (currentActiveId) {
           setConflictTask({ id: categoryId, title: categoryTitle });
           setIsConflictModalVisible(true);
           return;
@@ -92,7 +92,7 @@ export default function TasksScreen() {
         startTimer(categoryId, categoryTitle);
       }
     },
-    [activeTaskId, stopTimer, startTimer],
+    [stopTimer, startTimer],
   );
 
   const handleSaveSession = async (note: string | null) => {
@@ -210,7 +210,7 @@ export default function TasksScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.headerWrapper}>
-        <Header />
+        <Header title="Task" iconName="checkmark-circle-outline" />
       </View>
       <ScrollView
         contentContainerStyle={styles.container}
@@ -219,7 +219,7 @@ export default function TasksScreen() {
       >
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
 
-        <CreateCategoryButton
+        <CreateTaskButton
           onPress={() => {
             setSelectedTask(null);
             setModalVisible(true);
@@ -274,7 +274,9 @@ export default function TasksScreen() {
               return (
                 <View style={styles.emptyStateContainer}>
                   <Ionicons name="search-outline" size={48} color={colors.onSurfaceVariant} />
-                  <Text style={styles.emptyStateText}>No tasks found for "{searchQuery}"</Text>
+                  <Text style={styles.emptyStateText}>
+                    No tasks found for &quot;{searchQuery}&quot;
+                  </Text>
                 </View>
               );
             }
@@ -307,7 +309,7 @@ export default function TasksScreen() {
         </View>
       </ScrollView>
 
-      <CategoryModal
+      <TaskModal
         visible={modalVisible}
         onClose={() => {
           setModalVisible(false);
@@ -359,7 +361,7 @@ const TaskItem = memo(
     onDeleteTask,
   }: any) => {
     return (
-      <CategoryCard
+      <TaskCard
         title={task.title}
         hours={hoursForCard}
         iconName={task.icon as any}
@@ -378,6 +380,7 @@ const TaskItem = memo(
     );
   },
 );
+TaskItem.displayName = 'TaskItem';
 
 const styles = StyleSheet.create({
   safeArea: {
