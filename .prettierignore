@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+dist/
+web-build/
+
+# Native Builds
+android/
+ios/
+
+# Database auto-generated files
+drizzle/
+
+# Build artifacts & caches
+build/
+coverage/
+*.tsbuildinfo
+
+# Environment & OS files
+.DS_Store
+.env*
+*.log

@@ -1,5 +1,19 @@
 {
   "enabledPlugins": {
     "expo@claude-plugins-official": true
-  }
+  },
+  "customCommands": [
+    {
+      "name": "Start Expo Server",
+      "command": "npm run start"
+    },
+    {
+      "name": "Clear Metro Cache",
+      "command": "npx expo start -c"
+    },
+    {
+      "name": "Generate Drizzle Migrations",
+      "command": "npx drizzle-kit generate"
+    }
+  ]
 }
