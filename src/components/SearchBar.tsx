@@ -1,3 +1,4 @@
+import { memo } from 'react';
 // React-native imports
 import { StyleSheet, TextInput, TouchableOpacity, View } from 'react-native';
 // Expo imports
@@ -15,7 +16,7 @@ interface SearchBarProps {
   autoFocus?: boolean;
 }
 
-export default function SearchBar({
+export default memo(function SearchBar({
   value,
   onChangeText,
   placeholder = 'Search tasks...',
@@ -40,7 +41,7 @@ export default function SearchBar({
       )}
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {

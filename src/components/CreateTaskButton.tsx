@@ -1,5 +1,8 @@
+// React-native imports
 import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
+// Theme imports
 import { colors } from '../theme/colors';
 import { spacing, radius } from '../theme/spacing';
 import { typography } from '../theme/typography';
@@ -45,5 +48,5 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: typography.sizes.md,
     color: colors.onSurface,
-  }
+  },
 });

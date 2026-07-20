@@ -1,12 +1,18 @@
+// React imports
 import React, { useEffect, useRef } from 'react';
+// React-natve imports
 import { Animated, StyleSheet } from 'react-native';
 
-export default function AnimatedSplashScreen({ onAnimationComplete }: { onAnimationComplete: () => void }) {
+export default function AnimatedSplashScreen({
+  onAnimationComplete,
+}: {
+  onAnimationComplete: () => void;
+}) {
   const opacity = useRef(new Animated.Value(1)).current;
   const scale = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    setTimeout(() => {
+    const timeout = setTimeout(() => {
       Animated.sequence([
         Animated.timing(scale, {
           toValue: 0.9,
@@ -15,7 +21,7 @@ export default function AnimatedSplashScreen({ onAnimationComplete }: { onAnimat
         }),
         Animated.parallel([
           Animated.timing(scale, {
-            toValue: 3,
+            toValue: 1.8,
             duration: 600,
             useNativeDriver: true,
           }),
@@ -24,20 +30,21 @@ export default function AnimatedSplashScreen({ onAnimationComplete }: { onAnimat
             duration: 500,
             delay: 100,
             useNativeDriver: true,
-          })
-        ])
+          }),
+        ]),
       ]).start(() => {
         onAnimationComplete();
       });
-    }, 400); // Wait 400ms before starting animation so user sees the logo steadily for a moment
-  }, []);
+    }, 400);
+
+    return () => clearTimeout(timeout);
+  }, [onAnimationComplete, opacity, scale]);
 
   return (
     <Animated.View style={[styles.container, { opacity }]}>
-      <Animated.Image 
-        // Using the same icon that was configured in app.json for a seamless transition
-        source={require('../../assets/images/icon.png')} 
-        style={[styles.image, { transform: [{ scale }] }]} 
+      <Animated.Image
+        source={require('../../assets/images/icon.png')}
+        style={[styles.image, { transform: [{ scale }] }]}
         resizeMode="contain"
       />
     </Animated.View>
@@ -50,10 +57,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     alignItems: 'center',
     justifyContent: 'center',
-    zIndex: 99999, // Ensure it sits above all navigation stacks
+    zIndex: 99999,
   },
   image: {
-    width: 200, // Matches the imageWidth specified in app.json
+    width: 200,
     height: 200,
-  }
+  },
 });

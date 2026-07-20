@@ -1,5 +1,18 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Modal, TouchableWithoutFeedback, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
+// React imports
+import React, { useState, useEffect } from 'react';
+// React-native imports
+import {
+  View,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableWithoutFeedback,
+  TextInput,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+} from 'react-native';
+// Theme imports
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { spacing, radius } from '../theme/spacing';
@@ -14,6 +27,12 @@ interface NoteModalProps {
 export default function NoteModal({ visible, taskName, onClose, onSubmit }: NoteModalProps) {
   const [note, setNote] = useState('');
 
+  useEffect(() => {
+    if (!visible) {
+      setNote('');
+    }
+  }, [visible]);
+
   const handleSubmit = () => {
     onSubmit(note.trim().length > 0 ? note.trim() : null);
     setNote('');
@@ -24,28 +43,33 @@ export default function NoteModal({ visible, taskName, onClose, onSubmit }: Note
     setNote('');
   };
 
+  const handleClose = () => {
+    setNote('');
+    onClose();
+  };
+
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={onClose}
+      onRequestClose={handleClose}
       statusBarTranslucent
     >
-      <KeyboardAvoidingView 
-        style={{ flex: 1 }} 
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback onPress={onClose}>
+          <TouchableWithoutFeedback onPress={handleClose}>
             <View style={StyleSheet.absoluteFill} />
           </TouchableWithoutFeedback>
           <View style={styles.modalContainer}>
             <Text style={styles.title}>Session Note</Text>
             <Text style={styles.subtitle}>
-              What did you work on for "{taskName}"?
+              What did you work on for &quot;{taskName || 'this task'}&quot;?
             </Text>
-            
+
             <TextInput
               style={styles.input}
               placeholder="Add a note (optional)..."
@@ -57,18 +81,14 @@ export default function NoteModal({ visible, taskName, onClose, onSubmit }: Note
               autoFocus
               textAlignVertical="top"
             />
-            
+
             <View style={styles.buttonContainer}>
-              <TouchableOpacity 
-                style={styles.skipButton} 
-                onPress={handleSkip} 
-                activeOpacity={0.7}
-              >
+              <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.7}>
                 <Text style={styles.skipText}>Skip</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
-                style={styles.saveButton} 
-                onPress={handleSubmit} 
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSubmit}
                 activeOpacity={0.7}
               >
                 <Text style={styles.saveText}>Save Session</Text>
@@ -96,7 +116,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 340,
     elevation: 10,
-    shadowColor: "#000",
+    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
@@ -155,5 +175,5 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: typography.sizes.sm,
     color: '#ffffff',
-  }
+  },
 });

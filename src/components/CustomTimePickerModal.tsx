@@ -1,7 +1,20 @@
+// React imports
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Animated, TouchableOpacity, Modal, FlatList } from 'react-native';
+// React-native imports
+import {
+  View,
+  Text,
+  StyleSheet,
+  Animated,
+  TouchableOpacity,
+  Modal,
+  FlatList,
+  ListRenderItem,
+} from 'react-native';
+// Expo imports
 import * as Haptics from 'expo-haptics';
 import { Ionicons } from '@expo/vector-icons';
+// Theme imports
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { spacing, radius } from '../theme/spacing';
@@ -20,7 +33,7 @@ const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPickerProps) => {
   const flatListRef = useRef<FlatList>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
-  
+
   const REPEAT_COUNT = 100;
   const repeatedItems = React.useMemo(() => Array(REPEAT_COUNT).fill(items).flat(), [items]);
   const middleIndex = Math.floor(REPEAT_COUNT / 2) * items.length;
@@ -37,9 +50,9 @@ const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPicker
         const targetIndex = middleIndex + valueIndex;
         setTimeout(() => {
           hapticsEnabled.current = false;
-          flatListRef.current?.scrollToOffset({ 
-            offset: targetIndex * ITEM_HEIGHT, 
-            animated: false 
+          flatListRef.current?.scrollToOffset({
+            offset: targetIndex * ITEM_HEIGHT,
+            animated: false,
           });
           setTimeout(() => {
             hapticsEnabled.current = true;
@@ -75,7 +88,7 @@ const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPicker
     }
   };
 
-  const renderItem = ({ item, index }: { item: number, index: number }) => {
+  const renderItem: ListRenderItem<number> = ({ item, index }) => {
     const inputRange = [
       (index - 2) * ITEM_HEIGHT,
       (index - 1) * ITEM_HEIGHT,
@@ -83,7 +96,7 @@ const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPicker
       (index + 1) * ITEM_HEIGHT,
       (index + 2) * ITEM_HEIGHT,
     ];
-    
+
     const scale = scrollY.interpolate({
       inputRange,
       outputRange: [0.6, 0.8, 1, 0.8, 0.6],
@@ -111,14 +124,13 @@ const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPicker
         ref={flatListRef as any}
         data={repeatedItems}
         keyExtractor={(_, index) => index.toString()}
-        renderItem={renderItem}
+        renderItem={renderItem as ListRenderItem<unknown>}
         showsVerticalScrollIndicator={false}
         snapToInterval={ITEM_HEIGHT}
         decelerationRate="fast"
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: true }
-        )}
+        onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], {
+          useNativeDriver: true,
+        })}
         scrollEventThrottle={16}
         onMomentumScrollEnd={handleMomentumScrollEnd}
         contentContainerStyle={{ paddingVertical: ITEM_HEIGHT * 2 }}
@@ -143,12 +155,17 @@ interface CustomTimePickerModalProps {
   themeColor: string;
 }
 
-export const CustomTimePickerModal = ({ visible, onClose, onSave, initialTotalSeconds, themeColor }: CustomTimePickerModalProps) => {
+export const CustomTimePickerModal = ({
+  visible,
+  onClose,
+  onSave,
+  initialTotalSeconds,
+  themeColor,
+}: CustomTimePickerModalProps) => {
   const [hours, setHours] = useState(Math.floor(initialTotalSeconds / 3600));
   const [minutes, setMinutes] = useState(Math.floor((initialTotalSeconds % 3600) / 60));
   const [seconds, setSeconds] = useState(initialTotalSeconds % 60);
 
-  // Sync state when modal opens
   useEffect(() => {
     if (visible) {
       setHours(Math.floor(initialTotalSeconds / 3600));
@@ -158,6 +175,7 @@ export const CustomTimePickerModal = ({ visible, onClose, onSave, initialTotalSe
   }, [visible, initialTotalSeconds]);
 
   const handleSave = () => {
+    if (hours === 0 && minutes === 0 && seconds === 0) return;
     onSave(hours, minutes, seconds);
   };
 
@@ -166,35 +184,44 @@ export const CustomTimePickerModal = ({ visible, onClose, onSave, initialTotalSe
   const secondItems = Array.from({ length: 60 }, (_, i) => i);
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
       <View style={styles.overlay}>
-        <TouchableOpacity 
-          style={StyleSheet.absoluteFill} 
-          activeOpacity={1} 
-          onPress={onClose} 
-        />
+        <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onClose} />
         <View style={styles.sheet}>
           <View style={styles.header}>
             <TouchableOpacity onPress={onClose} style={styles.headerIcon}>
               <Ionicons name="chevron-down" size={24} color={colors.onSurfaceVariant} />
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleSave} style={[styles.saveButton, { backgroundColor: themeColor }]}>
+            <TouchableOpacity
+              onPress={handleSave}
+              style={[styles.saveButton, { backgroundColor: themeColor }]}
+            >
               <Ionicons name="add" size={20} color={colors.surface} />
               <Text style={[styles.saveText, { color: colors.surface }]}>Set Timer</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View style={styles.pickersContainer}>
-            <WheelPicker items={hourItems} selectedValue={hours} onValueChange={setHours} label="Hou" />
+            <WheelPicker
+              items={hourItems}
+              selectedValue={hours}
+              onValueChange={setHours}
+              label="Hr"
+            />
             <Text style={styles.colon}>:</Text>
-            <WheelPicker items={minuteItems} selectedValue={minutes} onValueChange={setMinutes} label="Min" />
+            <WheelPicker
+              items={minuteItems}
+              selectedValue={minutes}
+              onValueChange={setMinutes}
+              label="Min"
+            />
             <Text style={styles.colon}>:</Text>
-            <WheelPicker items={secondItems} selectedValue={seconds} onValueChange={setSeconds} label="Sec" />
+            <WheelPicker
+              items={secondItems}
+              selectedValue={seconds}
+              onValueChange={setSeconds}
+              label="Sec"
+            />
           </View>
         </View>
       </View>
@@ -250,12 +277,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    height: ITEM_HEIGHT * 5, // Shows 5 items
+    height: ITEM_HEIGHT * 5,
   },
   wheelContainer: {
     width: 90,
     alignItems: 'center',
     height: '100%',
+    overflow: 'visible',
   },
   wheelLabel: {
     position: 'absolute',
@@ -284,10 +312,10 @@ const styles = StyleSheet.create({
   pickerWindow: {
     position: 'absolute',
     top: ITEM_HEIGHT * 2 - 4,
-    width: 60,
+    width: 80,
     height: ITEM_HEIGHT + 8,
     backgroundColor: colors.surfaceVariant,
     opacity: 0.3,
     borderRadius: radius.md,
-  }
+  },
 });

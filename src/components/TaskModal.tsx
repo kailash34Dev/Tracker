@@ -1,9 +1,25 @@
-import { Modal, View, Text, StyleSheet, TouchableOpacity, Platform, ScrollView, TouchableWithoutFeedback, Keyboard, Animated, Easing, Dimensions } from 'react-native';
-import { useState, useEffect, useRef } from 'react';
+// React imports
+import { useState, useEffect, memo } from 'react';
+// React-native imports
+import {
+  Modal,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Platform,
+  ScrollView,
+  TouchableWithoutFeedback,
+  Keyboard,
+  KeyboardAvoidingView,
+} from 'react-native';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
+// Theme imports
 import { colors } from '../theme/colors';
 import { spacing, radius } from '../theme/spacing';
 import { typography } from '../theme/typography';
+// Component imports
 import SearchBar from './SearchBar';
 
 interface TaskModalProps {
@@ -14,53 +30,29 @@ interface TaskModalProps {
   existingTaskNames?: string[];
 }
 
-export default function TaskModal({ visible, onClose, onSubmit, initialData, existingTaskNames }: TaskModalProps) {
+const THEMES = [
+  { id: 'blue', color: colors.categoryBlue },
+  { id: 'purple', color: colors.categoryPurple },
+  { id: 'orange', color: colors.categoryOrange },
+  { id: 'green', color: colors.categoryGreen },
+  { id: 'pink', color: colors.categoryPink },
+  { id: 'teal', color: colors.categoryTeal },
+  { id: 'red', color: colors.categoryRed },
+  { id: 'indigo', color: colors.categoryIndigo },
+  { id: 'mint', color: colors.categoryMint },
+  { id: 'amber', color: colors.categoryAmber },
+];
+
+export default memo(function TaskModal({
+  visible,
+  onClose,
+  onSubmit,
+  initialData,
+  existingTaskNames,
+}: TaskModalProps) {
   const [name, setName] = useState('');
   const [theme, setTheme] = useState('random');
   const [error, setError] = useState<string | null>(null);
-  const animatedPadding = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
-
-    const showSub = Keyboard.addListener(showEvent, (e) => {
-      let paddingValue = e.endCoordinates.height;
-      
-      if (Platform.OS === 'android') {
-        const windowHeight = Dimensions.get('window').height;
-        const screenHeight = Dimensions.get('screen').height;
-        
-        // On older Androids (or specific OS skins), the system automatically resizes the window 
-        // to fit the keyboard, even with edge-to-edge enabled.
-        // If the window shrank significantly, the OS already did the work, so we shouldn't add padding.
-        if ((screenHeight - windowHeight) > 150) {
-          paddingValue = 0;
-        }
-      }
-
-      Animated.timing(animatedPadding, {
-        toValue: paddingValue,
-        duration: 250,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    });
-
-    const hideSub = Keyboard.addListener(hideEvent, () => {
-      Animated.timing(animatedPadding, {
-        toValue: 0,
-        duration: 250,
-        easing: Easing.out(Easing.ease),
-        useNativeDriver: false,
-      }).start();
-    });
-
-    return () => {
-      showSub.remove();
-      hideSub.remove();
-    };
-  }, [animatedPadding]);
 
   useEffect(() => {
     if (visible) {
@@ -75,19 +67,6 @@ export default function TaskModal({ visible, onClose, onSubmit, initialData, exi
     }
   }, [visible, initialData]);
 
-  const themes = [
-    { id: 'blue', color: colors.categoryBlue },
-    { id: 'purple', color: colors.categoryPurple },
-    { id: 'orange', color: colors.categoryOrange },
-    { id: 'green', color: colors.categoryGreen },
-    { id: 'pink', color: colors.categoryPink },
-    { id: 'teal', color: colors.categoryTeal },
-    { id: 'red', color: colors.categoryRed },
-    { id: 'indigo', color: colors.categoryIndigo },
-    { id: 'mint', color: colors.categoryMint },
-    { id: 'amber', color: colors.categoryAmber },
-  ];
-
   const handleSubmit = () => {
     const trimmedName = name.trim();
     if (!trimmedName) {
@@ -97,8 +76,9 @@ export default function TaskModal({ visible, onClose, onSubmit, initialData, exi
 
     if (existingTaskNames) {
       const isDuplicate = existingTaskNames.some(
-        taskName => taskName.toLowerCase() === trimmedName.toLowerCase() && 
-                    (!initialData || initialData.title.toLowerCase() !== trimmedName.toLowerCase())
+        (taskName) =>
+          taskName.toLowerCase() === trimmedName.toLowerCase() &&
+          (!initialData || initialData.title.toLowerCase() !== trimmedName.toLowerCase()),
       );
       if (isDuplicate) {
         setError('A task with this name already exists.');
@@ -111,9 +91,23 @@ export default function TaskModal({ visible, onClose, onSubmit, initialData, exi
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent={true}>
-      <Animated.View style={[styles.overlay, { paddingBottom: animatedPadding }]}>
-        <TouchableWithoutFeedback onPress={() => { Keyboard.dismiss(); onClose(); }}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+      statusBarTranslucent={true}
+    >
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        style={styles.overlay}
+      >
+        <TouchableWithoutFeedback
+          onPress={() => {
+            Keyboard.dismiss();
+            onClose();
+          }}
+        >
           <View style={StyleSheet.absoluteFill} />
         </TouchableWithoutFeedback>
 
@@ -124,11 +118,14 @@ export default function TaskModal({ visible, onClose, onSubmit, initialData, exi
               <Ionicons name="close" size={24} color={colors.onSurface} />
             </TouchableOpacity>
           </View>
-          
+
           <Text style={styles.label}>Name</Text>
           <SearchBar
             value={name}
-            onChangeText={(text) => { setName(text); setError(null); }}
+            onChangeText={(text) => {
+              setName(text);
+              setError(null);
+            }}
             placeholder="e.g. Study, Coding..."
             icon="pencil"
             autoFocus
@@ -136,25 +133,34 @@ export default function TaskModal({ visible, onClose, onSubmit, initialData, exi
           {error && <Text style={styles.errorText}>{error}</Text>}
 
           <Text style={styles.label}>Theme Color</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.themeSelectorScrollView} contentContainerStyle={styles.themeSelector}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.themeSelectorScrollView}
+            contentContainerStyle={styles.themeSelector}
+          >
             <TouchableOpacity
               style={[
                 styles.themeCircle,
-                { backgroundColor: colors.surfaceVariant, justifyContent: 'center', alignItems: 'center' },
-                theme === 'random' && styles.themeCircleSelected
+                {
+                  backgroundColor: colors.surfaceVariant,
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                },
+                theme === 'random' && styles.themeCircleSelected,
               ]}
               onPress={() => setTheme('random')}
             >
               <Ionicons name="shuffle" size={20} color={colors.onSurfaceVariant} />
             </TouchableOpacity>
 
-            {themes.map((t) => (
+            {THEMES.map((t) => (
               <TouchableOpacity
                 key={t.id}
                 style={[
                   styles.themeCircle,
                   { backgroundColor: t.color },
-                  theme === t.id && styles.themeCircleSelected
+                  theme === t.id && styles.themeCircleSelected,
                 ]}
                 onPress={() => setTheme(t.id)}
               />
@@ -165,10 +171,10 @@ export default function TaskModal({ visible, onClose, onSubmit, initialData, exi
             <Text style={styles.submitText}>{initialData ? 'Save Changes' : 'Create'}</Text>
           </TouchableOpacity>
         </View>
-      </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
-}
+});
 
 const styles = StyleSheet.create({
   overlay: {
@@ -181,7 +187,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.xl,
     borderTopRightRadius: radius.xl,
     padding: spacing.lg,
-    paddingBottom: spacing.xl * 2, // Extra padding for safe area
+    paddingBottom: spacing.xl * 2,
   },
   header: {
     flexDirection: 'row',
@@ -205,7 +211,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.medium,
     fontSize: typography.sizes.xs,
     color: colors.error,
-    marginTop: -8,
+    marginTop: 10,
     marginBottom: 8,
     marginLeft: spacing.xs,
   },

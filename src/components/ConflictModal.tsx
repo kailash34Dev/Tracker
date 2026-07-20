@@ -1,6 +1,17 @@
+// React imports
 import React from 'react';
-import { Modal, View, StyleSheet, TouchableWithoutFeedback, Text, TouchableOpacity } from 'react-native';
+// React-native imports
+import {
+  Modal,
+  View,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  Text,
+  TouchableOpacity,
+} from 'react-native';
+// Expo imports
 import { Ionicons } from '@expo/vector-icons';
+// Theme imports
 import { colors } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { spacing, radius } from '../theme/spacing';
