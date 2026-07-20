@@ -1,17 +1,16 @@
 // Tracker App Light Theme (Luminous Productivity)
-// Derived from DESIGN.md
 
 export const colors = {
   // Surface and backgrounds
   background: '#f8f9fa',
   surface: '#ffffff',
   surfaceVariant: '#e1e3e4',
-  
+
   // Base text
   onBackground: '#191c1d',
   onSurface: '#191c1d',
   onSurfaceVariant: '#444748',
-  
+
   // Brand colors
   primary: '#1a1a1a', // Deep Onyx
   onPrimary: '#ffffff',
@@ -39,12 +38,9 @@ export const colors = {
   onCategoryMint: '#006064',
   categoryAmber: '#fff8e1',
   onCategoryAmber: '#ff8f00',
-  // categoryYellow: '#fffde7',
-  // onCategoryYellow: '#fbc02d',
 
   // Borders & Accents
   border: '#e0e0e0',
   outline: '#747878',
   error: '#dc3545',
 };
-
