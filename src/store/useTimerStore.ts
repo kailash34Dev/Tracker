@@ -1,20 +1,26 @@
-import { create } from 'zustand';
 import { AppState, AppStateStatus } from 'react-native';
+import { create } from 'zustand';
 
 interface TimerState {
   activeTaskId: number | null;
   activeTaskName: string | null;
   elapsedSeconds: number;
   isPaused: boolean;
-  
+
   sessionStartTime: number | null;
   initialStartTime: number | null;
   accumulatedSeconds: number;
 
   startTimer: (taskId: number, taskName: string) => void;
-  stopTimer: () => { taskId: number; seconds: number; startTime: number; endTime: number } | null;
+  stopTimer: () => {
+    taskId: number;
+    taskName: string | null;
+    seconds: number;
+    startTime: number;
+    endTime: number;
+  } | null;
   togglePause: () => void;
-  
+
   // Internal actions
   updateTick: () => void;
   handleAppStateChange: (nextAppState: AppStateStatus) => void;
@@ -51,17 +57,17 @@ export const useTimerStore = create<TimerState>((set, get) => ({
 
   startTimer: (taskId, taskName) => {
     const { activeTaskId, isPaused } = get();
-    
+
     if (activeTaskId === taskId) {
       if (isPaused) {
         set({ sessionStartTime: Date.now(), isPaused: false });
         if (!timerInterval) {
-          timerInterval = setInterval(() => get().updateTick(), 1000);
+          timerInterval = setInterval(() => get().updateTick(), 1000) as any;
         }
       }
       return;
     }
-    
+
     const now = Date.now();
     set({
       activeTaskId: taskId,
@@ -72,33 +78,46 @@ export const useTimerStore = create<TimerState>((set, get) => ({
       elapsedSeconds: 0,
       isPaused: false,
     });
-    
+
     if (timerInterval) clearInterval(timerInterval);
-    timerInterval = setInterval(() => get().updateTick(), 1000);
-    
+    timerInterval = setInterval(() => get().updateTick(), 1000) as any;
+
     if (!appStateSubscription) {
-      appStateSubscription = AppState.addEventListener('change', (state) => get().handleAppStateChange(state));
+      appStateSubscription = AppState.addEventListener('change', (state) =>
+        get().handleAppStateChange(state),
+      );
     }
   },
 
   stopTimer: () => {
-    const { activeTaskId, isPaused, sessionStartTime, elapsedSeconds, accumulatedSeconds, initialStartTime } = get();
+    const {
+      activeTaskId,
+      activeTaskName,
+      isPaused,
+      sessionStartTime,
+      elapsedSeconds,
+      accumulatedSeconds,
+      initialStartTime,
+    } = get();
     if (!activeTaskId) return null;
-    
+
     let finalSeconds = elapsedSeconds;
     if (!isPaused && sessionStartTime) {
       const currentElapsed = Math.floor((Date.now() - sessionStartTime) / 1000);
       finalSeconds = accumulatedSeconds + currentElapsed;
     }
-    
+
     const endTime = Date.now();
     const result = {
       taskId: activeTaskId,
+      taskName: activeTaskName,
       seconds: finalSeconds,
-      startTime: initialStartTime ? Math.floor(initialStartTime / 1000) : Math.floor(endTime / 1000) - finalSeconds,
-      endTime: Math.floor(endTime / 1000)
+      startTime: initialStartTime
+        ? Math.floor(initialStartTime / 1000)
+        : Math.floor(endTime / 1000) - finalSeconds,
+      endTime: Math.floor(endTime / 1000),
     };
-    
+
     set({
       activeTaskId: null,
       activeTaskName: null,
@@ -108,15 +127,12 @@ export const useTimerStore = create<TimerState>((set, get) => ({
       elapsedSeconds: 0,
       isPaused: false,
     });
-    
+
     if (timerInterval) {
       clearInterval(timerInterval);
       timerInterval = null;
     }
-    
-    // We don't necessarily need to remove the AppState subscription here, 
-    // it will just cleanly do nothing when activeTaskId is null
-    
+
     return result;
   },
 
@@ -143,9 +159,9 @@ export const useTimerStore = create<TimerState>((set, get) => ({
           isPaused: false,
         });
         if (!timerInterval) {
-          timerInterval = setInterval(() => get().updateTick(), 1000);
+          timerInterval = setInterval(() => get().updateTick(), 1000) as any;
         }
       }
     }
-  }
+  },
 }));

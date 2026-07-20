@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
 interface ToastState {
+  id: number;
   visible: boolean;
   message: string;
   type: 'success' | 'error';
@@ -9,9 +10,10 @@ interface ToastState {
 }
 
 export const useToastStore = create<ToastState>((set) => ({
+  id: 0,
   visible: false,
   message: '',
   type: 'success',
-  showToast: (message, type = 'success') => set({ visible: true, message, type }),
+  showToast: (message, type = 'success') => set({ id: Date.now(), visible: true, message, type }),
   hideToast: () => set({ visible: false }),
 }));
