@@ -12,7 +12,7 @@ import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
 export default function GlobalToast() {
-  const { visible, message, type, hideToast } = useToastStore();
+  const { id, visible, message, type, hideToast } = useToastStore();
   const toastAnim = useRef(new Animated.Value(-100)).current;
 
   useEffect(() => {
@@ -38,7 +38,7 @@ export default function GlobalToast() {
       // Just in case it gets hidden externally
       toastAnim.setValue(-100);
     }
-  }, [visible, message, type, toastAnim, hideToast]);
+  }, [id, visible, message, type, toastAnim, hideToast]);
 
   // We always render the Animated.View but just move it offscreen when not visible,
   // to prevent unmounting during the exit animation.
