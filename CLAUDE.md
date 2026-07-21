@@ -16,7 +16,7 @@ Read the exact versioned docs at https://docs.expo.dev/versions/v54.0.0/ before 
 - **Routing**: `app/` directory uses Expo Router. Follow file-based routing conventions.
 - **Components**: `src/components/` contains reusable UI components.
 - **Database**: Database schema is in `src/db/schema.ts`. Drizzle migrations go in `drizzle/`.
-- **Styling**: Avoid inline styles. Use `StyleSheet.create` with theme tokens from `src/theme/` (`colors`, `spacing`, `typography`).
+- **Styling**: Avoid inline styles. Use `StyleSheet.create` with theme tokens from `src/theme/` (`colors`, `spacing`, `typography`). Strictly follow [DESIGN.md](./DESIGN.md) for all visual styling, UX patterns, and component anatomy.
 - **State Management**: Zustand is used for global state management (e.g. `src/store/useTimerStore.ts`). Context providers (`src/context/`) and custom hooks (`src/hooks/`) are used to manage database access.
 
 ## Performance Guidelines (CRITICAL)
