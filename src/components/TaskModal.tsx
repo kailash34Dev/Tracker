@@ -1,5 +1,5 @@
 // React imports
-import { useState, useEffect, memo } from 'react';
+import { useState, useEffect, memo, useRef } from 'react';
 // React-native imports
 import {
   Modal,
@@ -11,7 +11,7 @@ import {
   ScrollView,
   TouchableWithoutFeedback,
   Keyboard,
-  KeyboardAvoidingView,
+  Animated,
 } from 'react-native';
 // Expo imports
 import { Ionicons } from '@expo/vector-icons';
@@ -53,6 +53,42 @@ export default memo(function TaskModal({
   const [name, setName] = useState('');
   const [theme, setTheme] = useState('random');
   const [error, setError] = useState<string | null>(null);
+
+  const keyboardOffset = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const isManualKeyboardNeeded =
+      Platform.OS === 'ios' || (Platform.OS === 'android' && (Platform.Version as number) >= 30);
+
+    const showSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
+      (e) => {
+        if (isManualKeyboardNeeded) {
+          Animated.timing(keyboardOffset, {
+            toValue: e.endCoordinates.height,
+            duration: e.duration || 250,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    );
+    const hideSub = Keyboard.addListener(
+      Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
+      (e) => {
+        if (isManualKeyboardNeeded) {
+          Animated.timing(keyboardOffset, {
+            toValue: 0,
+            duration: e.duration || 250,
+            useNativeDriver: false,
+          }).start();
+        }
+      },
+    );
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, [keyboardOffset]);
 
   useEffect(() => {
     if (visible) {
@@ -103,10 +139,7 @@ export default memo(function TaskModal({
       onRequestClose={onClose}
       statusBarTranslucent={true}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
-      >
+      <Animated.View style={[styles.overlay, { paddingBottom: keyboardOffset }]}>
         <TouchableWithoutFeedback
           onPress={() => {
             Keyboard.dismiss();
@@ -177,7 +210,7 @@ export default memo(function TaskModal({
             <Text style={styles.submitText}>{initialData ? 'Save Changes' : 'Create'}</Text>
           </TouchableOpacity>
         </View>
-      </KeyboardAvoidingView>
+      </Animated.View>
     </Modal>
   );
 });
