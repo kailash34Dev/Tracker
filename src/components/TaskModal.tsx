@@ -74,6 +74,11 @@ export default memo(function TaskModal({
       return;
     }
 
+    if (trimmedName.length > 25) {
+      setError('Task name cannot exceed 25 characters.');
+      return;
+    }
+
     if (existingTaskNames) {
       const isDuplicate = existingTaskNames.some(
         (taskName) =>
@@ -129,6 +134,7 @@ export default memo(function TaskModal({
             placeholder="e.g. Study, Coding..."
             icon="pencil"
             autoFocus
+            maxLength={25}
           />
           {error && <Text style={styles.errorText}>{error}</Text>}
 

@@ -14,6 +14,7 @@ interface SearchBarProps {
   placeholder?: string;
   icon?: keyof typeof Ionicons.glyphMap;
   autoFocus?: boolean;
+  maxLength?: number;
 }
 
 export default memo(function SearchBar({
@@ -22,6 +23,7 @@ export default memo(function SearchBar({
   placeholder = 'Search tasks...',
   icon = 'search',
   autoFocus = false,
+  maxLength,
 }: SearchBarProps) {
   return (
     <View style={styles.container}>
@@ -33,6 +35,7 @@ export default memo(function SearchBar({
         placeholder={placeholder}
         placeholderTextColor={colors.onSurfaceVariant}
         autoFocus={autoFocus}
+        maxLength={maxLength}
       />
       {value.length > 0 && (
         <TouchableOpacity onPress={() => onChangeText('')} style={styles.clearButton}>
