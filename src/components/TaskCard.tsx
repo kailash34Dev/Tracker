@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     flex: 1,
-    paddingRight: spacing.sm,
+    paddingRight: spacing.md,
   },
   titleRow: {
     flexDirection: 'row',
