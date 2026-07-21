@@ -19,12 +19,7 @@ export default function AboutScreen() {
   const handleLinkPress = async (url: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        throw new Error('No app found to handle this link.');
-      }
+      await Linking.openURL(url);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'unknown error';
       showToast(`Couldn't open URL: ${errorMessage}`, 'error');

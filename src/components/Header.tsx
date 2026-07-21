@@ -42,12 +42,7 @@ export default function Header({ title, iconName }: HeaderProps) {
     const url = 'mailto:kailashphukan34@gmail.com?subject=Time Tracker Help & Feedback';
 
     try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        throw new Error('No email client found on this device.');
-      }
+      await Linking.openURL(url);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'unknown error';
       showToast(`Couldn't open email app: ${errorMessage}`, 'error');
