@@ -1,10 +1,10 @@
 // React-native imports
-import { TouchableOpacity, Text, StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // Expo imports
 import { Ionicons } from '@expo/vector-icons';
 // Theme imports
 import { colors } from '../theme/colors';
-import { spacing, radius } from '../theme/spacing';
+import { radius, spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
 interface CreateTaskButtonProps {

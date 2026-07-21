@@ -8,10 +8,11 @@ import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
+// Store imports
+import { useTimerStore } from '../store/useTimerStore';
+
 interface ActiveTimerBarProps {
   taskName: string;
-  elapsedSeconds: number;
-  isPaused: boolean;
   onTogglePause: () => void;
   onStop: () => void;
   onPress?: () => void;
@@ -19,12 +20,13 @@ interface ActiveTimerBarProps {
 
 export default memo(function ActiveTimerBar({
   taskName,
-  elapsedSeconds,
-  isPaused,
   onTogglePause,
   onStop,
   onPress,
 }: ActiveTimerBarProps) {
+  const elapsedSeconds = useTimerStore((state) => state.elapsedSeconds);
+  const isPaused = useTimerStore((state) => state.isPaused);
+  
   // Animation value for the pulsing dot
   const pulseValue = useRef(new Animated.Value(1)).current;
 

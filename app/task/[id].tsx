@@ -1,3 +1,6 @@
+// React imports
+import { useState, useEffect, useRef } from 'react';
+// React-native imports
 import {
   View,
   Text,
@@ -9,33 +12,35 @@ import {
   TouchableWithoutFeedback,
   Alert,
   PanResponder,
-  TextInput,
 } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useState, useEffect, useRef } from 'react';
-import * as Haptics from 'expo-haptics';
-import { colors } from '../../src/theme/colors';
-import { spacing, radius } from '../../src/theme/spacing';
-import { typography } from '../../src/theme/typography';
-import { useTimerStore } from '../../src/store/useTimerStore';
-import { useToastStore } from '../../src/store/useToastStore';
-import ConflictModal from '../../src/components/ConflictModal';
-import { CustomTimePickerModal } from '../../src/components/CustomTimePickerModal';
-import { CircularTimerProgress } from '../../src/components/CircularTimerProgress';
 import Reanimated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
   withRepeat,
-  withSequence,
   cancelAnimation,
   Easing,
   interpolate,
 } from 'react-native-reanimated';
-import { useDatabaseMutations } from '../../src/hooks/useDatabase';
+// Expo imports
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+// Theme imports
+import { colors } from '../../src/theme/colors';
+import { spacing, radius } from '../../src/theme/spacing';
+import { typography } from '../../src/theme/typography';
+// Store imports
+import { useTimerStore } from '../../src/store/useTimerStore';
+import { useToastStore } from '../../src/store/useToastStore';
+// Components imports
+import ConflictModal from '../../src/components/ConflictModal';
+import { CustomTimePickerModal } from '../../src/components/CustomTimePickerModal';
+import { CircularTimerProgress } from '../../src/components/CircularTimerProgress';
 import NoteModal from '../../src/components/NoteModal';
+// Hooks imports
+import { useDatabaseMutations } from '../../src/hooks/useDatabase';
 
 const themeMap: Record<string, { pastel: string; border: string }> = {
   blue: { pastel: colors.categoryBlue, border: colors.onCategoryBlue },
@@ -60,12 +65,31 @@ const formatTime = (totalSeconds: number) => {
   return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 };
 
+const TimerPill = ({ themeData, title, isActive, isPaused, pulseAnimatedStyle }: any) => (
+  <View style={[styles.pill, { backgroundColor: themeData.pastel }]}>
+    <Reanimated.View
+      style={[
+        styles.pulseDot,
+        { backgroundColor: themeData.border },
+        isActive && !isPaused ? pulseAnimatedStyle : { opacity: 1 },
+      ]}
+    />
+    <Text style={[styles.pillText, { color: themeData.border }]}>{title || 'Focus Time'}</Text>
+  </View>
+);
+
 export default function TaskScreen() {
   const router = useRouter();
-  const { id, title, hours, icon, theme } = useLocalSearchParams();
+  const { id, title, theme } = useLocalSearchParams();
 
-  const { activeTaskId, elapsedSeconds, isPaused, togglePause, stopTimer, startTimer } =
-    useTimerStore();
+  const activeTaskId = useTimerStore((state) => state.activeTaskId);
+  const elapsedSeconds = useTimerStore((state) =>
+    state.activeTaskId === Number(id) ? state.elapsedSeconds : 0,
+  );
+  const isPaused = useTimerStore((state) => state.isPaused);
+  const togglePause = useTimerStore((state) => state.togglePause);
+  const stopTimer = useTimerStore((state) => state.stopTimer);
+  const startTimer = useTimerStore((state) => state.startTimer);
   const taskId = Number(id);
   const isActive = activeTaskId === taskId;
   const isAnotherTaskActive = activeTaskId !== null && activeTaskId !== taskId;
@@ -96,10 +120,8 @@ export default function TaskScreen() {
   const [selectedDuration, setSelectedDuration] = useState<number>(30 * 60);
 
   const standardDurations = [15 * 60, 30 * 60, 45 * 60, 60 * 60, 120 * 60, 180 * 60];
-  const isStandardDuration = standardDurations.includes(selectedDuration);
 
   const [isCustomModalVisible, setIsCustomModalVisible] = useState(false);
-  const [customInput, setCustomInput] = useState('');
   const [isConflictModalVisible, setIsConflictModalVisible] = useState(false);
 
   const [segmentWidth, setSegmentWidth] = useState(0);
@@ -152,8 +174,8 @@ export default function TaskScreen() {
     if (isActive && !isPaused) {
       pulseAnim.value = withRepeat(
         withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        -1, // infinite
-        true, // auto-reverse (1 -> 0 -> 1)
+        -1,
+        true,
       );
 
       circlePulseAnim.value = withRepeat(
@@ -167,7 +189,7 @@ export default function TaskScreen() {
       pulseAnim.value = withTiming(0, { duration: 400 });
       circlePulseAnim.value = withTiming(1, { duration: 400 });
     }
-  }, [isActive, isPaused]);
+  }, [isActive, isPaused, circlePulseAnim, pulseAnim]);
 
   const pulseAnimatedStyle = useAnimatedStyle(() => ({
     opacity: interpolate(pulseAnim.value, [0, 1], [0.2, 1]),
@@ -194,7 +216,7 @@ export default function TaskScreen() {
     if (isActive) {
       const result = stopTimer();
       if (result) {
-        setPendingSession({ ...result, taskName: title as string });
+        setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
         setNoteModalVisible(true);
       }
     }
@@ -228,9 +250,21 @@ export default function TaskScreen() {
     }
   };
 
-  const progressHours = Math.floor(Number(hours || 0));
-  const progressMins = Math.round((Number(hours || 0) - progressHours) * 60);
-  const progressText = `${progressHours}h ${progressMins}m`;
+  useEffect(() => {
+    if (
+      mode === 'timer' &&
+      isActive &&
+      elapsedSeconds >= selectedDuration &&
+      selectedDuration > 0
+    ) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const result = stopTimer();
+      if (result) {
+        setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
+        setNoteModalVisible(true);
+      }
+    }
+  }, [mode, isActive, elapsedSeconds, selectedDuration, stopTimer]);
 
   const displayedSeconds =
     mode === 'timer'
@@ -331,18 +365,13 @@ export default function TaskScreen() {
               >
                 <Text style={styles.timerText}>{formatTime(displayedSeconds)}</Text>
 
-                <View style={[styles.pill, { backgroundColor: themeData.pastel }]}>
-                  <Reanimated.View
-                    style={[
-                      styles.pulseDot,
-                      { backgroundColor: themeData.border },
-                      isActive && !isPaused ? pulseAnimatedStyle : { opacity: 1 },
-                    ]}
-                  />
-                  <Text style={[styles.pillText, { color: themeData.border }]}>
-                    {title || 'Focus Time'}
-                  </Text>
-                </View>
+                <TimerPill
+                  themeData={themeData}
+                  title={title}
+                  isActive={isActive}
+                  isPaused={isPaused}
+                  pulseAnimatedStyle={pulseAnimatedStyle}
+                />
               </Reanimated.View>
             </>
           ) : (
@@ -362,18 +391,13 @@ export default function TaskScreen() {
                 >
                   <Text style={styles.timerText}>{formatTime(displayedSeconds)}</Text>
 
-                  <View style={[styles.pill, { backgroundColor: themeData.pastel }]}>
-                    <Reanimated.View
-                      style={[
-                        styles.pulseDot,
-                        { backgroundColor: themeData.border },
-                        isActive && !isPaused ? pulseAnimatedStyle : { opacity: 1 },
-                      ]}
-                    />
-                    <Text style={[styles.pillText, { color: themeData.border }]}>
-                      {title || 'Focus Time'}
-                    </Text>
-                  </View>
+                  <TimerPill
+                    themeData={themeData}
+                    title={title}
+                    isActive={isActive}
+                    isPaused={isPaused}
+                    pulseAnimatedStyle={pulseAnimatedStyle}
+                  />
                 </View>
               </CircularTimerProgress>
             </View>
@@ -539,7 +563,7 @@ export default function TaskScreen() {
         onConfirm={() => {
           const result = stopTimer();
           if (result) {
-            setPendingSession({ ...result, taskName: title as string });
+            setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
             setNoteModalVisible(true);
           }
           startTimer(taskId, title as string);
@@ -626,7 +650,7 @@ const styles = StyleSheet.create({
   timerSection: {
     alignItems: 'center',
     paddingBottom: spacing.lg,
-    marginTop: 28, // Push the timer display circle down a bit
+    marginTop: 28,
   },
   timerCircle: {
     width: 260,
@@ -636,7 +660,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: colors.surface,
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3, // Increased slightly to make the dynamic color more visible
+    shadowOpacity: 0.3,
     shadowRadius: 24,
     elevation: 10,
     marginBottom: spacing.xl,
@@ -719,84 +743,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.semiBold,
     fontSize: typography.sizes.md,
   },
-  taskSelectionCard: {
-    marginTop: 16,
-    borderRadius: radius.xl,
-    padding: spacing.md,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  taskSelectionInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  taskIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#ffffff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  taskDetails: {},
-  activeTaskLabel: {
-    fontFamily: typography.fontFamily.bold,
-    fontSize: 10,
-    letterSpacing: 0.5,
-    marginBottom: 2,
-    opacity: 0.8,
-  },
-  taskTitle: {
-    fontFamily: typography.fontFamily.bold,
-    fontSize: typography.sizes.md,
-  },
-  taskSubtitle: {
-    fontFamily: typography.fontFamily.medium,
-    fontSize: typography.sizes.sm,
-    opacity: 0.8,
-  },
-  progressCard: {
-    marginTop: 16,
-    backgroundColor: '#e3f2fd',
-    borderRadius: radius.xl,
-    padding: spacing.md,
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 12,
-  },
-  cardTitle: {
-    fontFamily: typography.fontFamily.bold,
-    fontSize: typography.sizes.md,
-    color: '#1565c0',
-  },
-  cardSubtitle: {
-    fontFamily: typography.fontFamily.medium,
-    fontSize: typography.sizes.sm,
-    color: '#1565c0',
-    opacity: 0.8,
-  },
-  progressTime: {
-    fontFamily: typography.fontFamily.bold,
-    fontSize: typography.sizes.md,
-    color: '#1565c0',
-  },
-  progressBarBg: {
-    width: '100%',
-    height: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.6)',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#1565c0',
-    borderRadius: 6,
-  },
+
   dropdownMenu: {
     position: 'absolute',
     backgroundColor: colors.surface,

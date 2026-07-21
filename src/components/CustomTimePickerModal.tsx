@@ -30,6 +30,34 @@ interface WheelPickerProps {
 
 const AnimatedFlatList = Animated.createAnimatedComponent(FlatList);
 
+const WheelItem = React.memo(({ item, index, scrollY }: { item: number; index: number; scrollY: Animated.Value }) => {
+  const inputRange = [
+    (index - 2) * ITEM_HEIGHT,
+    (index - 1) * ITEM_HEIGHT,
+    index * ITEM_HEIGHT,
+    (index + 1) * ITEM_HEIGHT,
+    (index + 2) * ITEM_HEIGHT,
+  ];
+
+  const scale = scrollY.interpolate({
+    inputRange,
+    outputRange: [0.6, 0.8, 1, 0.8, 0.6],
+    extrapolate: 'clamp',
+  });
+
+  const opacity = scrollY.interpolate({
+    inputRange,
+    outputRange: [0.2, 0.4, 1, 0.4, 0.2],
+    extrapolate: 'clamp',
+  });
+
+  return (
+    <Animated.View style={[styles.wheelItem, { transform: [{ scale }], opacity }]}>
+      <Text style={styles.wheelItemText}>{item.toString().padStart(2, '0')}</Text>
+    </Animated.View>
+  );
+});
+
 const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPickerProps) => {
   const flatListRef = useRef<FlatList>(null);
   const scrollY = useRef(new Animated.Value(0)).current;
@@ -88,33 +116,9 @@ const WheelPicker = ({ items, selectedValue, onValueChange, label }: WheelPicker
     }
   };
 
-  const renderItem: ListRenderItem<number> = ({ item, index }) => {
-    const inputRange = [
-      (index - 2) * ITEM_HEIGHT,
-      (index - 1) * ITEM_HEIGHT,
-      index * ITEM_HEIGHT,
-      (index + 1) * ITEM_HEIGHT,
-      (index + 2) * ITEM_HEIGHT,
-    ];
-
-    const scale = scrollY.interpolate({
-      inputRange,
-      outputRange: [0.6, 0.8, 1, 0.8, 0.6],
-      extrapolate: 'clamp',
-    });
-
-    const opacity = scrollY.interpolate({
-      inputRange,
-      outputRange: [0.2, 0.4, 1, 0.4, 0.2],
-      extrapolate: 'clamp',
-    });
-
-    return (
-      <Animated.View style={[styles.wheelItem, { transform: [{ scale }], opacity }]}>
-        <Text style={styles.wheelItemText}>{item.toString().padStart(2, '0')}</Text>
-      </Animated.View>
-    );
-  };
+  const renderItem: ListRenderItem<number> = ({ item, index }) => (
+    <WheelItem item={item} index={index} scrollY={scrollY} />
+  );
 
   return (
     <View style={styles.wheelContainer}>

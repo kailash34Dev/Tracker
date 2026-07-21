@@ -1,7 +1,10 @@
-import { useEffect, useState } from 'react';
+// React imports
+import { useEffect, useState, useCallback } from 'react';
+// React-native imports
+import { View, Text } from 'react-native';
+// Expo imports
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, Text } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   useFonts,
@@ -10,40 +13,48 @@ import {
   PlusJakartaSans_600SemiBold,
   PlusJakartaSans_700Bold,
 } from '@expo-google-fonts/plus-jakarta-sans';
+// Theme imports
 import { colors } from '../src/theme/colors';
+// DB imports
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
-import { db } from '../src/db';
+import { drizzle } from 'drizzle-orm/expo-sqlite';
+import * as SQLite from 'expo-sqlite';
 import migrations from '../drizzle/migrations';
+// Components imports
 import AnimatedSplashScreen from '../src/components/AnimatedSplashScreen';
 import GlobalToast from '../src/components/GlobalToast';
 
 SplashScreen.preventAutoHideAsync();
 
+// Create a separate connection for migrations without enableChangeListener to prevent deadlock
+const migrationDb = drizzle(SQLite.openDatabaseSync('tracker.db', { enableChangeListener: false }));
+
 export default function RootLayout() {
-  const [loaded] = useFonts({
+  const [loaded, fontError] = useFonts({
     'PlusJakartaSans-Regular': PlusJakartaSans_400Regular,
     'PlusJakartaSans-Medium': PlusJakartaSans_500Medium,
     'PlusJakartaSans-SemiBold': PlusJakartaSans_600SemiBold,
     'PlusJakartaSans-Bold': PlusJakartaSans_700Bold,
   });
 
-  const { success, error } = useMigrations(db, migrations);
-  const [appReady, setAppReady] = useState(false);
+  const { success, error: migrationError } = useMigrations(migrationDb, migrations);
   const [splashAnimationComplete, setSplashAnimationComplete] = useState(false);
 
+  const handleAnimationComplete = useCallback(() => {
+    setSplashAnimationComplete(true);
+  }, []);
+
   useEffect(() => {
-    if (loaded && success) {
-      setAppReady(true);
-      // Hide native splash screen immediately, since our AnimatedSplashScreen takes over
+    if ((loaded && success) || fontError || migrationError) {
       SplashScreen.hideAsync();
     }
-  }, [loaded, success]);
+  }, [loaded, success, fontError, migrationError]);
 
   if (!loaded || !success) {
-    if (error) {
+    if (migrationError || fontError) {
       return (
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text>Migration error: {error.message}</Text>
+          <Text>Error: {(migrationError || fontError)?.message}</Text>
         </View>
       );
     }
@@ -52,7 +63,6 @@ export default function RootLayout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Light theme status bar since background is light grey */}
       <StatusBar style="dark" />
       <Stack
         screenOptions={{
@@ -65,10 +75,10 @@ export default function RootLayout() {
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       </Stack>
 
-      {appReady && !splashAnimationComplete && (
-        <AnimatedSplashScreen onAnimationComplete={() => setSplashAnimationComplete(true)} />
+      {!splashAnimationComplete && (
+        <AnimatedSplashScreen onAnimationComplete={handleAnimationComplete} />
       )}
-      
+
       <GlobalToast />
     </View>
   );

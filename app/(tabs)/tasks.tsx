@@ -1,5 +1,5 @@
 // React imports
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 // React-native imports
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,13 +8,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 // Component imports
-import Header from '../../src/components/Header';
-import SearchBar from '../../src/components/SearchBar';
 import ActiveTimerBar from '../../src/components/ActiveTimerBar';
 import ConflictModal from '../../src/components/ConflictModal';
 import CreateTaskButton from '../../src/components/CreateTaskButton';
 import DeleteConfirmModal from '../../src/components/DeleteConfirmModal';
+import Header from '../../src/components/Header';
 import NoteModal from '../../src/components/NoteModal';
+import SearchBar from '../../src/components/SearchBar';
 import TaskCard from '../../src/components/TaskCard';
 import TaskModal from '../../src/components/TaskModal';
 // Theme imports
@@ -43,15 +43,11 @@ export default function TasksScreen() {
 
   const router = useRouter();
 
-  const {
-    activeTaskId,
-    activeTaskName,
-    elapsedSeconds,
-    isPaused,
-    startTimer,
-    stopTimer,
-    togglePause,
-  } = useTimerStore();
+  const activeTaskId = useTimerStore((state) => state.activeTaskId);
+  const activeTaskName = useTimerStore((state) => state.activeTaskName);
+  const startTimer = useTimerStore((state) => state.startTimer);
+  const stopTimer = useTimerStore((state) => state.stopTimer);
+  const togglePause = useTimerStore((state) => state.togglePause);
 
   // Database Hooks
   const { tasks } = useTasks();
@@ -60,14 +56,41 @@ export default function TasksScreen() {
     useDatabaseMutations();
 
   // Compute hours per task for today
-  const taskHoursMap = entries.reduce(
-    (acc, entry) => {
-      if (!acc[entry.taskId]) acc[entry.taskId] = 0;
-      acc[entry.taskId] += entry.durationSeconds;
-      return acc;
-    },
-    {} as Record<number, number>,
-  );
+  const taskHoursMap = useMemo(() => {
+    return entries.reduce(
+      (acc, entry) => {
+        if (!acc[entry.taskId]) acc[entry.taskId] = 0;
+        acc[entry.taskId] += entry.durationSeconds;
+        return acc;
+      },
+      {} as Record<number, number>,
+    );
+  }, [entries]);
+
+  const filteredTasks = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return tasks.filter((c) => c.title.toLowerCase().includes(query));
+  }, [tasks, searchQuery]);
+
+  const existingTaskNames = useMemo(() => tasks.map((t) => t.title), [tasks]);
+
+  const closeTaskModal = useCallback(() => {
+    setModalVisible(false);
+    setSelectedTask(null);
+  }, []);
+
+  const closeDeleteModal = useCallback(() => {
+    setDeleteModalVisible(false);
+    setSelectedTask(null);
+  }, []);
+
+  const closeConflictModal = useCallback(() => {
+    setIsConflictModalVisible(false);
+  }, []);
+
+  const closeNoteModal = useCallback(() => {
+    setNoteModalVisible(false);
+  }, []);
 
   const handleToggleTimer = useCallback(
     async (categoryId: number, categoryTitle: string) => {
@@ -79,7 +102,7 @@ export default function TasksScreen() {
         // Stopping current timer
         const result = stopTimer();
         if (result) {
-          setPendingSession({ ...result, taskName: categoryTitle });
+          setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
           setNoteModalVisible(true);
         }
       } else {
@@ -114,8 +137,7 @@ export default function TasksScreen() {
     if (activeTaskId) {
       const result = stopTimer();
       if (result) {
-        const title = tasks.find((t) => t.id === activeTaskId)?.title || '';
-        setPendingSession({ ...result, taskName: title });
+        setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
         setNoteModalVisible(true);
       }
     }
@@ -219,25 +241,26 @@ export default function TasksScreen() {
       >
         <SearchBar value={searchQuery} onChangeText={setSearchQuery} />
 
-        <CreateTaskButton
-          onPress={() => {
-            setSelectedTask(null);
-            setModalVisible(true);
-          }}
-        />
+        <View style={{ marginTop: 10 }}>
+          <CreateTaskButton
+            onPress={() => {
+              setSelectedTask(null);
+              setModalVisible(true);
+            }}
+          />
+        </View>
 
         {activeTaskId !== null && activeTaskName !== null && (
           <ActiveTimerBar
             taskName={activeTaskName}
-            elapsedSeconds={elapsedSeconds}
-            isPaused={isPaused}
             onTogglePause={togglePause}
             onStop={() => handleToggleTimer(activeTaskId, activeTaskName)}
             onPress={() => {
               const activeTask = tasks.find((c) => c.id === activeTaskId);
               if (activeTask) {
                 const secondsToday = taskHoursMap[activeTask.id] || 0;
-                const hoursForCard = (secondsToday + elapsedSeconds) / 3600;
+                const hoursForCard =
+                  (secondsToday + useTimerStore.getState().elapsedSeconds) / 3600;
                 router.push({
                   pathname: '/task/[id]',
                   params: {
@@ -255,10 +278,6 @@ export default function TasksScreen() {
 
         <View style={styles.listContainer}>
           {(() => {
-            const filteredTasks = tasks.filter((c) =>
-              c.title.toLowerCase().includes(searchQuery.toLowerCase()),
-            );
-
             if (tasks.length === 0) {
               return (
                 <View style={styles.emptyStateContainer}>
@@ -282,18 +301,13 @@ export default function TasksScreen() {
             }
 
             return filteredTasks.map((task) => {
-              const secondsToday = taskHoursMap[task.id] || 0;
-              const activeSeconds = activeTaskId === task.id ? elapsedSeconds : 0;
-              const hoursForCard = (secondsToday + activeSeconds) / 3600;
+              const baseSeconds = taskHoursMap[task.id] || 0;
 
               return (
                 <TaskItem
                   key={task.id}
                   task={task}
-                  hoursForCard={hoursForCard}
-                  isActive={activeTaskId === task.id}
-                  isAnotherTaskActive={activeTaskId !== null && activeTaskId !== task.id}
-                  isPaused={activeTaskId === task.id && isPaused}
+                  baseSeconds={baseSeconds}
                   onCardPress={handleCardPress}
                   onToggleTimer={handleToggleTimer}
                   onTogglePause={togglePause}
@@ -311,35 +325,29 @@ export default function TasksScreen() {
 
       <TaskModal
         visible={modalVisible}
-        onClose={() => {
-          setModalVisible(false);
-          setSelectedTask(null);
-        }}
+        onClose={closeTaskModal}
         onSubmit={handleCreateCategory}
         initialData={selectedTask}
-        existingTaskNames={tasks.map((t) => t.title)}
+        existingTaskNames={existingTaskNames}
       />
 
       <DeleteConfirmModal
         visible={deleteModalVisible}
         taskName={selectedTask?.title}
-        onClose={() => {
-          setDeleteModalVisible(false);
-          setSelectedTask(null);
-        }}
+        onClose={closeDeleteModal}
         onConfirm={confirmDeleteTask}
       />
 
       <ConflictModal
         visible={isConflictModalVisible}
-        onCancel={() => setIsConflictModalVisible(false)}
+        onCancel={closeConflictModal}
         onConfirm={confirmStartConflictTask}
       />
 
       <NoteModal
         visible={noteModalVisible}
         taskName={pendingSession?.taskName || ''}
-        onClose={() => setNoteModalVisible(false)}
+        onClose={closeNoteModal}
         onSubmit={handleSaveSession}
       />
     </SafeAreaView>
@@ -349,10 +357,7 @@ export default function TasksScreen() {
 const TaskItem = memo(
   ({
     task,
-    hoursForCard,
-    isActive,
-    isAnotherTaskActive,
-    isPaused,
+    baseSeconds,
     onCardPress,
     onToggleTimer,
     onTogglePause,
@@ -360,6 +365,17 @@ const TaskItem = memo(
     onPinTask,
     onDeleteTask,
   }: any) => {
+    const isActive = useTimerStore((state) => state.activeTaskId === task.id);
+    const activeSeconds = useTimerStore((state) =>
+      state.activeTaskId === task.id ? state.elapsedSeconds : 0,
+    );
+    const isAnotherTaskActive = useTimerStore(
+      (state) => state.activeTaskId !== null && state.activeTaskId !== task.id,
+    );
+    const isPaused = useTimerStore((state) => state.activeTaskId === task.id && state.isPaused);
+
+    const hoursForCard = (baseSeconds + activeSeconds) / 3600;
+
     return (
       <TaskCard
         title={task.title}
@@ -401,7 +417,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.xs,
   },
   bottomPadding: {
-    height: 85, // Make room for tab bar
+    height: 85,
   },
   emptyStateContainer: {
     alignItems: 'center',
