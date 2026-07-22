@@ -113,7 +113,7 @@ export default function TaskScreen() {
 
   const handleHelpFeedback = () => {
     setDropdownVisible(false);
-    Linking.openURL('mailto:support@example.com').catch((error) => {
+    Linking.openURL('mailto:kailashphukan34@gmail.com').catch((error) => {
       showToast(`Could not open the link: ${error}`, 'error');
     });
   };
