@@ -143,6 +143,11 @@ export default function TaskScreen() {
     outputRange: [0, Math.max(0, (segmentWidth - 8) / 2)],
   });
 
+  const isActiveRef = useRef(isActive);
+  useEffect(() => {
+    isActiveRef.current = isActive;
+  }, [isActive]);
+
   const panResponder = useRef(
     PanResponder.create({
       onStartShouldSetPanResponder: () => false,
@@ -153,7 +158,7 @@ export default function TaskScreen() {
         );
       },
       onPanResponderRelease: (evt, gestureState) => {
-        if (!isActive) {
+        if (!isActiveRef.current) {
           if (gestureState.dx > 20) {
             // Swiped right -> go to Stopwatch (which is on the left)
             setMode('stopwatch');
