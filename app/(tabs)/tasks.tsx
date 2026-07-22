@@ -255,6 +255,10 @@ export default function TasksScreen() {
             taskName={activeTaskName}
             onTogglePause={togglePause}
             onStop={() => handleToggleTimer(activeTaskId, activeTaskName)}
+            onTimerComplete={(result) => {
+              setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
+              setNoteModalVisible(true);
+            }}
             onPress={() => {
               const activeTask = tasks.find((c) => c.id === activeTaskId);
               if (activeTask) {

@@ -4,6 +4,7 @@ import { memo, useEffect, useRef } from 'react';
 import { Animated, Easing, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 // Expo imports
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
@@ -16,6 +17,7 @@ interface ActiveTimerBarProps {
   onTogglePause: () => void;
   onStop: () => void;
   onPress?: () => void;
+  onTimerComplete?: (result: any) => void;
 }
 
 export default memo(function ActiveTimerBar({
@@ -23,11 +25,23 @@ export default memo(function ActiveTimerBar({
   onTogglePause,
   onStop,
   onPress,
+  onTimerComplete,
 }: ActiveTimerBarProps) {
   const elapsedSeconds = useTimerStore((state) => state.elapsedSeconds);
   const isPaused = useTimerStore((state) => state.isPaused);
   const activeMode = useTimerStore((state) => state.activeMode);
   const targetDuration = useTimerStore((state) => state.targetDuration);
+  const stopTimer = useTimerStore((state) => state.stopTimer);
+
+  useEffect(() => {
+    if (activeMode === 'timer' && elapsedSeconds >= targetDuration && targetDuration > 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      const result = stopTimer();
+      if (result && onTimerComplete) {
+        onTimerComplete(result);
+      }
+    }
+  }, [activeMode, elapsedSeconds, targetDuration, stopTimer, onTimerComplete]);
 
   // Animation value for the pulsing dot
   const pulseValue = useRef(new Animated.Value(1)).current;
