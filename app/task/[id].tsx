@@ -10,8 +10,8 @@ import {
   Animated,
   Modal,
   TouchableWithoutFeedback,
-  Alert,
   PanResponder,
+  Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Reanimated, {
@@ -113,7 +113,9 @@ export default function TaskScreen() {
 
   const handleHelpFeedback = () => {
     setDropdownVisible(false);
-    Alert.alert('Help & Feedback', 'Coming soon!');
+    Linking.openURL('mailto:support@example.com').catch((error) => {
+      showToast(`Could not open the link: ${error}`, 'error');
+    });
   };
 
   const [mode, setMode] = useState<'stopwatch' | 'timer'>('stopwatch');
