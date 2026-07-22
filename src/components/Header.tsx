@@ -116,6 +116,8 @@ const styles = StyleSheet.create({
     fontFamily: typography.fontFamily.bold,
     fontSize: typography.sizes.xl,
     color: colors.primary,
+    includeFontPadding: false,
+    textAlignVertical: 'center',
   },
   menuButton: {
     width: 40,

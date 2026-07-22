@@ -26,7 +26,9 @@ export default memo(function ActiveTimerBar({
 }: ActiveTimerBarProps) {
   const elapsedSeconds = useTimerStore((state) => state.elapsedSeconds);
   const isPaused = useTimerStore((state) => state.isPaused);
-  
+  const activeMode = useTimerStore((state) => state.activeMode);
+  const targetDuration = useTimerStore((state) => state.targetDuration);
+
   // Animation value for the pulsing dot
   const pulseValue = useRef(new Animated.Value(1)).current;
 
@@ -98,7 +100,9 @@ export default memo(function ActiveTimerBar({
       {/* Row 2: Timer */}
       <View style={styles.timerRow}>
         <Text style={[styles.timerText, isPaused && styles.timerTextPaused]}>
-          {formatTime(elapsedSeconds)}
+          {activeMode === 'timer'
+            ? formatTime(Math.max(targetDuration - elapsedSeconds, 0))
+            : formatTime(elapsedSeconds)}
         </Text>
       </View>
 

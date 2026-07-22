@@ -118,8 +118,15 @@ export default function TaskScreen() {
     });
   };
 
-  const [mode, setMode] = useState<'stopwatch' | 'timer'>('stopwatch');
-  const [selectedDuration, setSelectedDuration] = useState<number>(30 * 60);
+  const activeMode = useTimerStore((state) => state.activeMode);
+  const targetDuration = useTimerStore((state) => state.targetDuration);
+
+  const [mode, setMode] = useState<'stopwatch' | 'timer'>(
+    isActive && activeMode ? activeMode : 'stopwatch',
+  );
+  const [selectedDuration, setSelectedDuration] = useState<number>(
+    isActive && targetDuration ? targetDuration : 30 * 60,
+  );
 
   const standardDurations = [15 * 60, 30 * 60, 45 * 60, 60 * 60, 120 * 60, 180 * 60];
 
@@ -251,7 +258,7 @@ export default function TaskScreen() {
       return;
     }
     if (!isActive) {
-      startTimer(taskId, title as string);
+      startTimer(taskId, title as string, mode, selectedDuration);
     } else if (isPaused) {
       togglePause();
     }
@@ -573,7 +580,7 @@ export default function TaskScreen() {
             setPendingSession({ ...result, taskName: result.taskName || 'Unknown Task' });
             setNoteModalVisible(true);
           }
-          startTimer(taskId, title as string);
+          startTimer(taskId, title as string, mode, selectedDuration);
           setIsConflictModalVisible(false);
         }}
       />

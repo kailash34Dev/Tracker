@@ -4,6 +4,8 @@ import { create } from 'zustand';
 interface TimerState {
   activeTaskId: number | null;
   activeTaskName: string | null;
+  activeMode: 'stopwatch' | 'timer' | null;
+  targetDuration: number;
   elapsedSeconds: number;
   isPaused: boolean;
 
@@ -11,7 +13,12 @@ interface TimerState {
   initialStartTime: number | null;
   accumulatedSeconds: number;
 
-  startTimer: (taskId: number, taskName: string) => void;
+  startTimer: (
+    taskId: number,
+    taskName: string,
+    mode?: 'stopwatch' | 'timer',
+    targetDuration?: number,
+  ) => void;
   stopTimer: () => {
     taskId: number;
     taskName: string | null;
@@ -33,6 +40,8 @@ let appStateSubscription: any = null;
 export const useTimerStore = create<TimerState>((set, get) => ({
   activeTaskId: null,
   activeTaskName: null,
+  activeMode: null,
+  targetDuration: 0,
   elapsedSeconds: 0,
   isPaused: false,
   sessionStartTime: null,
@@ -55,7 +64,7 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     }
   },
 
-  startTimer: (taskId, taskName) => {
+  startTimer: (taskId, taskName, mode = 'stopwatch', targetDuration = 0) => {
     const { activeTaskId, isPaused } = get();
 
     if (activeTaskId === taskId) {
@@ -72,6 +81,8 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     set({
       activeTaskId: taskId,
       activeTaskName: taskName,
+      activeMode: mode,
+      targetDuration: targetDuration,
       sessionStartTime: now,
       initialStartTime: now,
       accumulatedSeconds: 0,
@@ -121,6 +132,8 @@ export const useTimerStore = create<TimerState>((set, get) => ({
     set({
       activeTaskId: null,
       activeTaskName: null,
+      activeMode: null,
+      targetDuration: 0,
       sessionStartTime: null,
       initialStartTime: null,
       accumulatedSeconds: 0,
