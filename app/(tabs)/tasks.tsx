@@ -90,6 +90,7 @@ export default function TasksScreen() {
 
   const closeNoteModal = useCallback(() => {
     setNoteModalVisible(false);
+    setPendingSession(null);
   }, []);
 
   const handleToggleTimer = useCallback(

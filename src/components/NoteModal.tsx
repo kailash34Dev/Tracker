@@ -38,10 +38,7 @@ export default function NoteModal({ visible, taskName, onClose, onSubmit }: Note
     setNote('');
   };
 
-  const handleSkip = () => {
-    onSubmit(null);
-    setNote('');
-  };
+
 
   const handleClose = () => {
     setNote('');
@@ -83,8 +80,8 @@ export default function NoteModal({ visible, taskName, onClose, onSubmit }: Note
             />
 
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={styles.skipButton} onPress={handleSkip} activeOpacity={0.7}>
-                <Text style={styles.skipText}>Skip</Text>
+              <TouchableOpacity style={styles.skipButton} onPress={handleClose} activeOpacity={0.7}>
+                <Text style={styles.skipText}>Don&apos;t save</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.saveButton}
@@ -154,14 +151,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 12,
     borderRadius: radius.md,
-    backgroundColor: colors.surfaceVariant,
+    backgroundColor: '#ffebee',
     alignItems: 'center',
     marginRight: 6,
   },
   skipText: {
     fontFamily: typography.fontFamily.semiBold,
     fontSize: typography.sizes.sm,
-    color: colors.primary,
+    color: colors.error,
   },
   saveButton: {
     flex: 1,

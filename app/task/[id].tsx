@@ -588,7 +588,10 @@ export default function TaskScreen() {
       <NoteModal
         visible={noteModalVisible}
         taskName={pendingSession?.taskName || ''}
-        onClose={() => setNoteModalVisible(false)}
+        onClose={() => {
+          setNoteModalVisible(false);
+          setPendingSession(null);
+        }}
         onSubmit={handleSaveSession}
       />
     </SafeAreaView>
